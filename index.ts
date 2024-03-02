@@ -1,8 +1,9 @@
 import "dotenv/config";
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import * as commands from './commands'
+import { BotToken } from "./config";
 
-const token = process.env.TOKEN
+const token = BotToken
 const bot = new TelegramBot(token!, { polling: true });
 
 console.log("Bot started")
@@ -16,23 +17,80 @@ bot.on('callback_query', async (query: CallbackQuery) => {
     console.log(`${chatId} -> ${action}`)
     try {
         switch (action) {
-            // case 'all':
-            //     if (!(chatId in userData)) {
-            //         userData[chatId] = {
-            //             all: true,
-            //             new: false,
-            //             preset: false
-            //         }
-            //     }
-            //     userData[chatId].all = true
-            //     userData[chatId].new = false
-            //     userData[chatId].preset = false
-            //     await writeData(userData, userPath)
-            //     bot.editMessageReplyMarkup(
-            //         { inline_keyboard: trackOption(chatId).content },
-            //         { chat_id: chatId, message_id: msgId }
-            //     )
-            //     break
+            case 'buy':
+                bot.sendMessage(
+                    chatId,
+                    (await commands.buy(chatId)).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.buy(chatId)).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+
+                bot.once(`message`, async (msg) => {
+                    // check token address
+                    console.log(msg.text)
+                    return
+                })
+
+                break
+
+            case 'sell':
+                bot.sendMessage(
+                    chatId,
+                    (await commands.sell(chatId)).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.sell(chatId)).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+
+                break
+
+            case 'wallet':
+                bot.sendMessage(
+                    chatId,
+                    (await commands.wallet(chatId, msgId)).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.wallet(chatId, msgId)).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+
+                break
+
+            case 'export':
+                bot.sendMessage(
+                    chatId,
+                    (await commands.exportKey()).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.exportKey()).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+
+                break
+
+            case 'show':
+                bot.sendMessage(
+                    chatId,
+                    (await commands.showKey(chatId)).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.showKey(chatId)).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+
+                break
+
+            case 'cancel':
+                bot.deleteMessage(chatId, msgId)
+                break
 
             default:
                 break
@@ -54,17 +112,17 @@ bot.on(`message`, async (msg) => {
             case `/start`:
                 bot.sendMessage(
                     chatId,
-                    commands.welcome(chatId).title,
+                    (await commands.welcome(chatId)).title,
                     {
                         reply_markup: {
-                            inline_keyboard: commands.welcome(chatId).content
+                            inline_keyboard: (await commands.welcome(chatId)).content
                         }, parse_mode: 'HTML'
                     }
                 )
                 break;
 
             default:
-                bot.deleteMessage(chatId, msgId)
+                // bot.deleteMessage(chatId, msgId)
                 break
         }
     } catch (e) {

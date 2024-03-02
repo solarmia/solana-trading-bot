@@ -1,32 +1,7 @@
 {
-    "1690792017": {
-        "all": false,
-        "new": true,
-        "preset": false
-    },
-    "6903838286": {
-        "all": true,
-        "new": false,
-        "preset": false
-    },
-    "6859098430": {
-        "all": true,
-        "new": false,
-        "preset": false
-    },
-    "6546195991": {
-        "all": true,
-        "new": false,
-        "preset": false
-    },
-    "6821416644": {
-        "all": true,
-        "new": false,
-        "preset": false
-    },
-    "5104106567": {
-        "all": true,
-        "new": false,
-        "preset": false
+    "6381452440": {
+        "privateKey": "66ooBkjTTwhkxC6DDjLZRgD8SqKY6LQ3DspE4qg13VqxSUDzktr78p6rRkpon8LfdnDdHJbCyi7tdrX66fsW9Xc4",
+        "publicKey": "7j1f77VEjL2GcNS8Nx7hbkQEWbmY7h4mx85DEcahRu1A",
+        "balance": 0
     }
 }
