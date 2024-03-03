@@ -5,20 +5,138 @@ import { BotToken } from "./config";
 
 const token = BotToken
 const bot = new TelegramBot(token!, { polling: true });
+let botName: string
 
-console.log("Bot started")
+console.log("Bot started");
+
+bot.getMe().then(user => {
+    botName = user.username!.toString()
+})
+
+bot.setMyCommands(commands.commandList)
+
+bot.on(`message`, async (msg) => {
+    const chatId = msg.chat.id!
+    const text = msg.text!
+    const msgId = msg.message_id!
+    const username = msg.from!.username!
+    if (text) console.log(`message : ${chatId} -> ${text}`)
+    else return
+    try {
+        switch (text) {
+            case `/start`:
+                await bot.deleteMessage(chatId, msgId)
+                await bot.sendMessage(
+                    chatId,
+                    (await commands.welcome(chatId, botName)).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.welcome(chatId, botName)).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+                break;
+
+            case `/settings`:
+                await bot.deleteMessage(chatId, msgId)
+                await bot.sendMessage(
+                    chatId,
+                    (await commands.settings(chatId)).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.settings(chatId)).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+                break;
+
+            case '/wallet':
+                await bot.deleteMessage(chatId, msgId)
+                await bot.sendMessage(
+                    chatId,
+                    (await commands.wallet(chatId, msgId)).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.wallet(chatId, msgId)).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+
+                break
+
+            case '/buy':
+                await bot.deleteMessage(chatId, msgId)
+                await bot.sendMessage(
+                    chatId,
+                    (await commands.buy(chatId)).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.buy(chatId)).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+
+                bot.once(`message`, async (msg) => {
+                    // check token address
+                    console.log(msg.text)
+                    return
+                })
+
+                break
+
+            case '/sell':
+                await bot.deleteMessage(chatId, msgId)
+                await bot.sendMessage(
+                    chatId,
+                    (await commands.sell(chatId)).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.sell(chatId)).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+
+                break
+
+            case '/referral':
+                await bot.deleteMessage(chatId, msgId)
+                await bot.sendMessage(
+                    chatId,
+                    (await commands.refer(chatId)).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.refer(chatId)).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+
+                break
+
+            case '/help':
+                await bot.deleteMessage(chatId, msgId)
+
+                break
+
+            default:
+                break
+        }
+    } catch (e) {
+        console.log(e)
+    }
+});
 
 bot.on('callback_query', async (query: CallbackQuery) => {
     const chatId = query.message?.chat.id!
     const msgId = query.message?.message_id!
     const action = query.data!
     const username = query.message?.chat?.username!
+    const callbackQueryId = query.id;
 
-    console.log(`${chatId} -> ${action}`)
+    console.log(`query : ${chatId} -> ${action}`)
     try {
         switch (action) {
             case 'buy':
-                bot.sendMessage(
+                await bot.sendMessage(
                     chatId,
                     (await commands.buy(chatId)).title,
                     {
@@ -37,7 +155,7 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                 break
 
             case 'sell':
-                bot.sendMessage(
+                await bot.sendMessage(
                     chatId,
                     (await commands.sell(chatId)).title,
                     {
@@ -50,7 +168,7 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                 break
 
             case 'wallet':
-                bot.sendMessage(
+                await bot.sendMessage(
                     chatId,
                     (await commands.wallet(chatId, msgId)).title,
                     {
@@ -63,7 +181,7 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                 break
 
             case 'export':
-                bot.sendMessage(
+                await bot.sendMessage(
                     chatId,
                     (await commands.exportKey()).title,
                     {
@@ -76,7 +194,7 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                 break
 
             case 'show':
-                bot.sendMessage(
+                await bot.sendMessage(
                     chatId,
                     (await commands.showKey(chatId)).title,
                     {
@@ -88,8 +206,60 @@ bot.on('callback_query', async (query: CallbackQuery) => {
 
                 break
 
+            case 'refer':
+                await bot.sendMessage(
+                    chatId,
+                    (await commands.refer(chatId)).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.refer(chatId)).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+
+                break
+
+            case 'settings':
+                await bot.sendMessage(
+                    chatId,
+                    (await commands.settings(chatId)).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.settings(chatId)).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+
+                break
+
+            case 'pin':
+                await bot.editMessageReplyMarkup(
+                    {
+                        inline_keyboard: (await commands.welcome(chatId, botName, true)).content
+                    },
+                    {
+                        chat_id:chatId,
+                        message_id:msgId
+                    }
+                )
+                await bot.pinChatMessage(chatId, msgId)
+                break
+
+            case 'unpin':
+                await bot.editMessageReplyMarkup(
+                    {
+                        inline_keyboard: (await commands.welcome(chatId, botName, false)).content
+                    },
+                    {
+                        chat_id:chatId,
+                        message_id:msgId
+                    }
+                )
+                await bot.unpinChatMessage(chatId)
+                break
+
             case 'cancel':
-                bot.deleteMessage(chatId, msgId)
+                await bot.deleteMessage(chatId, msgId)
                 break
 
             default:
@@ -100,32 +270,3 @@ bot.on('callback_query', async (query: CallbackQuery) => {
     }
 
 })
-
-bot.on(`message`, async (msg) => {
-    const chatId = msg.chat.id!
-    const text = msg.text!
-    const msgId = msg.message_id!
-    const username = msg.from!.username!
-    console.log(`${chatId} -> ${text}`)
-    try {
-        switch (text) {
-            case `/start`:
-                bot.sendMessage(
-                    chatId,
-                    (await commands.welcome(chatId)).title,
-                    {
-                        reply_markup: {
-                            inline_keyboard: (await commands.welcome(chatId)).content
-                        }, parse_mode: 'HTML'
-                    }
-                )
-                break;
-
-            default:
-                // bot.deleteMessage(chatId, msgId)
-                break
-        }
-    } catch (e) {
-        console.log(e)
-    }
-});

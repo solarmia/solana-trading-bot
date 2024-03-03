@@ -1,9 +1,10 @@
 import * as web3 from '@solana/web3.js'
+import bs58 from 'bs58';
+import { encode } from 'js-base64';
 
-import { rpcURL, userInfoPath } from '../config';
+import { RpcURL, userInfoPath } from '../config';
 import { Iuser } from '../utils/type';
 import { readData, writeData } from '../utils';
-import bs58 from 'bs58';
 
 const userPath = userInfoPath
 let userData: Iuser = {}
@@ -12,39 +13,43 @@ export const init = async () => {
   userData = await readData(userInfoPath)
 }
 
-export const fetch = async (chatId: number) => {
-  let newKepair: any
-  let pubkey: any
-  let privkey: any
+export const fetch = async (chatId: number, botName?: string) => {
   if (!(chatId.toString() in userData)) {
-    newKepair = new web3.Keypair();
-    pubkey = newKepair.publicKey.toString();
-    privkey = bs58.encode(Buffer.from(newKepair.secretKey))
+    const newKepair = new web3.Keypair();
+    const publicKey = newKepair.publicKey.toString();
+    const privateKey = bs58.encode(Buffer.from(newKepair.secretKey))
+    const referralLink = `https://t.me/${botName}?ref=${encode(chatId.toString())}`
     userData[chatId] = {
-      privateKey: privkey,
-      publicKey: pubkey,
+      privateKey,
+      publicKey,
       balance: 0,
+      referralLink,
+      referees: [],
+      referrer: ''
     }
     writeData(userData, userPath)
     return {
-      pubkey: pubkey.toString(),
-      privkey: privkey.toString(),
+      publicKey,
+      privateKey,
+      referralLink,
       balance: 0
     }
   } else {
     try {
-      const connection = new web3.Connection(rpcURL)
+      const connection = new web3.Connection(RpcURL)
       const balance = await connection.getBalance(new web3.PublicKey(userData[chatId].publicKey))
       userData[chatId].balance = balance
       return {
-        pubkey: userData[chatId].publicKey,
-        privkey: userData[chatId].privateKey,
+        publicKey: userData[chatId].publicKey,
+        privateKey: userData[chatId].privateKey,
+        referralLink: userData[chatId].referralLink,
         balance
       }
     } catch (e) {
       return {
-        pubkey: userData[chatId].publicKey,
-        privkey: userData[chatId].privateKey,
+        publicKey: userData[chatId].publicKey,
+        privateKey: userData[chatId].privateKey,
+        referralLink: userData[chatId].referralLink,
         balance: 0
       }
     }

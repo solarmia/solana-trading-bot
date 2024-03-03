@@ -1,7 +1,10 @@
 {
     "6381452440": {
-        "privateKey": "66ooBkjTTwhkxC6DDjLZRgD8SqKY6LQ3DspE4qg13VqxSUDzktr78p6rRkpon8LfdnDdHJbCyi7tdrX66fsW9Xc4",
-        "publicKey": "7j1f77VEjL2GcNS8Nx7hbkQEWbmY7h4mx85DEcahRu1A",
-        "balance": 0
+        "privateKey": "XYu7zz9aRar2r2BiKtXpkYwE9HpFt2Jbo5BdMppt1wbzchxfZmqfLmmD7MbFq5wwHq6RAyG82faWFuUAzzjuerW",
+        "publicKey": "Ha7SoWuv2gi9bYJZdkoNkrpZ69upg1i1Zi7oWv7w1kot",
+        "balance": 0,
+        "referralLink": "https://t.me/honest_saldegen_bot?ref=NjM4MTQ1MjQ0MA==",
+        "referees": [],
+        "referrer": ""
     }
 }

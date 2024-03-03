@@ -1,6 +1,8 @@
 import fs from 'fs';
-import { Iuser } from './type';
 
+
+import { Iuser } from './type';
+import { BotName } from '../config';
 
 export const readData = async (userPath: string): Promise<Iuser> => {
   return JSON.parse(fs.readFileSync(userPath, `utf8`));

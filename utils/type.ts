@@ -3,5 +3,8 @@ export interface Iuser {
       privateKey: string,
       publicKey: string,
       balance: number,
+      referralLink:string,
+      referees:string[],
+      referrer: string
   }
 }
