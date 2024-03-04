@@ -1,7 +1,9 @@
 import "dotenv/config";
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import TelegramBot, { CallbackQuery } from 'node-telegram-bot-api';
+
 import * as commands from './commands'
 import { BotToken } from "./config";
+import { init } from "./commands/helper";
 
 const token = BotToken
 const bot = new TelegramBot(token!, { polling: true });
@@ -14,6 +16,8 @@ bot.getMe().then(user => {
 })
 
 bot.setMyCommands(commands.commandList)
+
+init()
 
 bot.on(`message`, async (msg) => {
     const chatId = msg.chat.id!
@@ -135,6 +139,43 @@ bot.on('callback_query', async (query: CallbackQuery) => {
     console.log(`query : ${chatId} -> ${action}`)
     try {
         switch (action) {
+            case 'import':
+                await bot.deleteMessage(chatId, msgId)
+                const inputmsg = await bot.sendMessage(
+                    chatId,
+                    `Please input your private key`
+                )
+
+                bot.once(`message`, async (msg) => {
+                    await bot.deleteMessage(chatId, inputmsg.message_id)
+                    await bot.deleteMessage(chatId, msg.message_id)
+                    await bot.sendMessage(
+                        chatId,
+                        (await commands.importWallet(chatId, msg.text!, botName)).title,
+                        {
+                            reply_markup: {
+                                inline_keyboard: (await commands.importWallet(chatId, msg.text!, botName)).content
+                            }, parse_mode: 'HTML'
+                        }
+                    )
+                    return
+                })
+
+                break
+
+            case 'create':
+                await bot.deleteMessage(chatId, msgId)
+                await bot.sendMessage(
+                    chatId,
+                    (await commands.createWallet(chatId, botName)).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.createWallet(chatId, botName)).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+                break
+
             case 'buy':
                 await bot.sendMessage(
                     chatId,
@@ -238,8 +279,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                         inline_keyboard: (await commands.welcome(chatId, botName, true)).content
                     },
                     {
-                        chat_id:chatId,
-                        message_id:msgId
+                        chat_id: chatId,
+                        message_id: msgId
                     }
                 )
                 await bot.pinChatMessage(chatId, msgId)
@@ -251,8 +292,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                         inline_keyboard: (await commands.welcome(chatId, botName, false)).content
                     },
                     {
-                        chat_id:chatId,
-                        message_id:msgId
+                        chat_id: chatId,
+                        message_id: msgId
                     }
                 )
                 await bot.unpinChatMessage(chatId)

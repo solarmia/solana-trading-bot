@@ -1,5 +1,4 @@
-import TelegramBot from 'node-telegram-bot-api';
-import { fetch } from './helper'
+import { checkInfo, createWalletHelper, fetch, importWalletHelper } from './helper'
 
 export const commandList = [
     { command: 'start', description: 'Start the bot' },
@@ -11,10 +10,93 @@ export const commandList = [
     { command: 'help', description: 'Tips and faqs' }
 ];
 
-export const welcome = async (userId: number, botName?: string, pin: boolean = false) => {
-    const { publicKey, balance } = await fetch(userId, botName)
+export const welcome1 = async (chatId: number, botName?: string, pin: boolean = false) => {
+    const { publicKey, balance } = await fetch(chatId, botName)
 
-    const title = `Welcome to HonestBot
+    const title = `To get started with trading, send some SOL to your Honestbot wallet address:
+<code>${publicKey}</code>
+
+Sol balance: ${balance}
+
+Once done tap refresh and your balance will appear here.`
+
+    const content = [
+        [{ text: `Buy`, callback_data: 'buy' }, { text: `Sell`, callback_data: 'sell' }],
+        [{ text: `Wallet`, callback_data: 'wallet' }, { text: `Settings`, callback_data: 'settings' }],
+        [{ text: `Refer Friend`, callback_data: 'refer' }, { text: `Help`, callback_data: 'help' }],
+        [{ text: `Refresh`, callback_data: 'refresh' }, { text: `${pin ? 'Unpin' : 'Pin'}`, callback_data: `${pin ? 'unpin' : 'pin'}` }],
+    ]
+
+    return {
+        title, content
+    }
+}
+
+export const welcome = async (chatId: number, botName?: string, pin: boolean = false) => {
+    if (await checkInfo(chatId)) {
+        const { publicKey, balance } = await fetch(chatId, botName)
+
+        const title = `Welcome to HonestBot
+        
+To get started with trading, send some SOL to your Honestbot wallet address:
+<code>${publicKey}</code>
+
+Sol balance: ${balance}
+
+Once done tap refresh and your balance will appear here.`
+
+        const content = [
+            [{ text: `Buy`, callback_data: 'buy' }, { text: `Sell`, callback_data: 'sell' }],
+            [{ text: `Wallet`, callback_data: 'wallet' }, { text: `Settings`, callback_data: 'settings' }],
+            [{ text: `Refer Friend`, callback_data: 'refer' }, { text: `Help`, callback_data: 'help' }],
+            [{ text: `Refresh`, callback_data: 'refresh' }, { text: `${pin ? 'Unpin' : 'Pin'}`, callback_data: `${pin ? 'unpin' : 'pin'}` }],
+        ]
+
+        return {
+            title, content
+        }
+    } else {
+
+        const title = `Welcome to HonestBot
+    
+Are you going to create new wallet or import your own wallet?`
+
+        const content = [
+            [{ text: `Import`, callback_data: 'import' }, { text: `Create`, callback_data: 'create' }],
+        ]
+
+        return {
+            title, content
+        }
+    }
+}
+
+export const importWallet = async (chatId: number, privateKey: string, botName: string) => {
+    const { publicKey, balance } = await importWalletHelper(chatId, privateKey, botName)
+
+    const title = `Successfully imported!
+    
+Your Honestbot wallet address:
+<code>${publicKey}</code>
+
+Sol balance: ${balance}`
+
+    const content = [
+        [{ text: `Buy`, callback_data: 'buy' }, { text: `Sell`, callback_data: 'sell' }],
+        [{ text: `Wallet`, callback_data: 'wallet' }, { text: `Settings`, callback_data: 'settings' }],
+        [{ text: `Refer Friend`, callback_data: 'refer' }, { text: `Help`, callback_data: 'help' }],
+        [{ text: `Refresh`, callback_data: 'refresh' }, { text: `${'Pin'}`, callback_data: `${'pin'}` }],
+    ]
+
+    return {
+        title, content
+    }
+}
+
+export const createWallet = async (chatId: number, botName: string) => {
+    const { publicKey, balance } = await createWalletHelper(chatId, botName)
+
+    const title = `Successfully Created!
     
 To get started with trading, send some SOL to your Honestbot wallet address:
 <code>${publicKey}</code>
@@ -27,7 +109,7 @@ Once done tap refresh and your balance will appear here.`
         [{ text: `Buy`, callback_data: 'buy' }, { text: `Sell`, callback_data: 'sell' }],
         [{ text: `Wallet`, callback_data: 'wallet' }, { text: `Settings`, callback_data: 'settings' }],
         [{ text: `Refer Friend`, callback_data: 'refer' }, { text: `Help`, callback_data: 'help' }],
-        [{ text: `Refresh`, callback_data: 'refresh' }, { text: `${pin ? 'Unpin' : 'Pin'}`, callback_data: `${pin ? 'unpin' : 'pin'}` }],
+        [{ text: `Refresh`, callback_data: 'refresh' }, { text: `${'Pin'}`, callback_data: `${'pin'}` }],
     ]
 
     return {

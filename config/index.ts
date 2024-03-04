@@ -3,6 +3,5 @@ dotenv.config();
 
 export const BotToken = process.env.TOKEN!
 export const RpcURL = process.env.RPC_URL!
-export const BotName = process.env.RPC_URL!
 
-export const userInfoPath = './user.json'
+export const userPath = './user.json'
