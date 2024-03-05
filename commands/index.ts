@@ -1,5 +1,27 @@
-import { checkInfo, createWalletHelper, fetch, importWalletHelper } from './helper'
+import { checkInfo, checkValidAddr, createWalletHelper, fetch, importWalletHelper } from './helper'
 
+interface IConfirm {
+    [key: string]: {
+        title: string;
+        content: { text: string; callback_data: string; }[][];
+    };
+}
+
+const confirmList: IConfirm =
+{
+    exportKey: {
+        title: "Are you sure you want to export your Private Key?",
+        content: [
+            [{ text: `Confirm`, callback_data: `show` }, { text: `Cancel`, callback_data: `cancel` }]
+        ]
+    },
+    resetWallet: {
+        title: "Are you sure you want to reset your wallet?",
+        content: [
+            [{ text: `Reset Wallet`, callback_data: `import` }, { text: `Cancel`, callback_data: `cancel` }]
+        ]
+    },
+}
 export const commandList = [
     { command: 'start', description: 'Start the bot' },
     { command: 'settings', description: 'Show the settings menu' },
@@ -10,27 +32,27 @@ export const commandList = [
     { command: 'help', description: 'Tips and faqs' }
 ];
 
-export const welcome1 = async (chatId: number, botName?: string, pin: boolean = false) => {
-    const { publicKey, balance } = await fetch(chatId, botName)
+// export const welcome1 = async (chatId: number, botName?: string, pin: boolean = false) => {
+//     const { publicKey, balance } = await fetch(chatId, botName)
 
-    const title = `To get started with trading, send some SOL to your Honestbot wallet address:
-<code>${publicKey}</code>
+//     const title = `To get started with trading, send some SOL to your Honestbot wallet address:
+// <code>${publicKey}</code>
 
-Sol balance: ${balance}
+// Sol balance: ${balance}
 
-Once done tap refresh and your balance will appear here.`
+// Once done tap refresh and your balance will appear here.`
 
-    const content = [
-        [{ text: `Buy`, callback_data: 'buy' }, { text: `Sell`, callback_data: 'sell' }],
-        [{ text: `Wallet`, callback_data: 'wallet' }, { text: `Settings`, callback_data: 'settings' }],
-        [{ text: `Refer Friend`, callback_data: 'refer' }, { text: `Help`, callback_data: 'help' }],
-        [{ text: `Refresh`, callback_data: 'refresh' }, { text: `${pin ? 'Unpin' : 'Pin'}`, callback_data: `${pin ? 'unpin' : 'pin'}` }],
-    ]
+//     const content = [
+//         [{ text: `Buy`, callback_data: 'buy' }, { text: `Sell`, callback_data: 'sell' }],
+//         [{ text: `Wallet`, callback_data: 'wallet' }, { text: `Settings`, callback_data: 'settings' }],
+//         [{ text: `Refer Friend`, callback_data: 'refer' }, { text: `Help`, callback_data: 'help' }],
+//         [{ text: `Refresh`, callback_data: 'refresh' }, { text: `${pin ? 'Unpin' : 'Pin'}`, callback_data: `${pin ? 'unpin' : 'pin'}` }],
+//     ]
 
-    return {
-        title, content
-    }
-}
+//     return {
+//         title, content
+//     }
+// }
 
 export const welcome = async (chatId: number, botName?: string, pin: boolean = false) => {
     if (await checkInfo(chatId)) {
@@ -93,6 +115,27 @@ Sol balance: ${balance}`
     }
 }
 
+export const refreshWallet = async (chatId: number) => {
+    const { publicKey, balance } = await fetch(chatId)
+    const title = `Successfully refreshed!
+    
+Your Honestbot wallet address:
+<code>${publicKey}</code>
+
+Sol balance: ${balance}`
+
+    const content = [
+        [{ text: `View on solscan`, url: `https://solscan.io/account/${publicKey}` }, { text: `Refresh`, callback_data: `refresh` }],
+        [{ text: `Withdraw all SOL`, callback_data: `withdraw` }, { text: `Withdraw X SOL`, callback_data: `withdrawX` }],
+        [{ text: `Export Private Key`, callback_data: `export` }, { text: `Reset wallet`, callback_data: `reset` }],
+        [{ text: `Close`, callback_data: `cancel` }]
+    ]
+
+    return {
+        title, content
+    }
+}
+
 export const createWallet = async (chatId: number, botName: string) => {
     const { publicKey, balance } = await createWalletHelper(chatId, botName)
 
@@ -146,19 +189,20 @@ Select token to sell.`
     }
 }
 
-export const wallet = async (chatId: number, msgId: number) => {
+export const wallet = async (chatId: number) => {
     const { publicKey, balance } = await fetch(chatId)
     const title = `Your Wallet:
     
-Address: <code>${publicKey}</code>
+Your Honestbot wallet address: <code>${publicKey}</code>
 Balance: ${balance} SOL
 
-Tap to copy the address and send SOL to deposit.`
+${balance == 0 ? 'Tap to copy the address and send SOL to deposit.' : ''}`
 
     const content = [
-        [{ text: `View on solscan`, url: `https://solscan.io/account/${publicKey}` }, { text: `Refresh`, callback_data: `refresh:${msgId}` }],
+        [{ text: `View on solscan`, url: `https://solscan.io/account/${publicKey}` }, { text: `Refresh`, callback_data: `refresh` }],
         [{ text: `Withdraw all SOL`, callback_data: `withdraw` }, { text: `Withdraw X SOL`, callback_data: `withdrawX` }],
-        [{ text: `Export Private Key`, callback_data: `export` }, { text: `Close`, callback_data: `cancel` }]
+        [{ text: `Export Private Key`, callback_data: `export` }, { text: `Reset wallet`, callback_data: `reset` }],
+        [{ text: `Close`, callback_data: `cancel` }]
     ]
 
     return {
@@ -166,12 +210,10 @@ Tap to copy the address and send SOL to deposit.`
     }
 }
 
-export const exportKey = async () => {
-    const title = `Are you sure you want to export your Private Key?`
+export const confirm = async (status: string) => {
+    const title = confirmList[status].title
 
-    const content = [
-        [{ text: `Confirm`, callback_data: `show` }, { text: `Cancel`, callback_data: `cancel` }]
-    ]
+    const content = confirmList[status].content
 
     return {
         title, content
@@ -213,14 +255,14 @@ You can get reward if you refer someone`
 }
 
 export const settings = async (chatId: number) => {
+    // AUTO BUY
+    // Immediately buy when pasting token address. Tap to toggle.
+
     const title = `Settings
 
 GENERAL SETTINGS
-Snaip bot Announcements: Occasional announcements. Tap to toggle.
+Honest bot Announcements: Occasional announcements. Tap to toggle.
 Minimum Position Value: Minimum position value to show in portfolio. Will hide tokens below this threshhold. Tap to edit.
-
-AUTO BUY
-Immediately buy when pasting token address. Tap to toggle.
 
 SLIPPAGE CONFIG
 Customize your slippage settings for buys and sells. Tap to edit.
@@ -237,4 +279,15 @@ Increase your Transaction Priority to improve transaction speed. Select preset o
     ]
 
     return { title, content }
+}
+
+export const getTokenInfo = async (address: string) => {
+    console.log("commands")
+    const result = await checkValidAddr(address)
+}
+
+export const invalid = async () => {
+    const title = 'Invalid behaviour'
+
+    return { title }
 }

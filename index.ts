@@ -56,12 +56,12 @@ bot.on(`message`, async (msg) => {
 
             case '/wallet':
                 await bot.deleteMessage(chatId, msgId)
-                await bot.sendMessage(
+                const id = await bot.sendMessage(
                     chatId,
-                    (await commands.wallet(chatId, msgId)).title,
+                    (await commands.wallet(chatId)).title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.wallet(chatId, msgId)).content
+                            inline_keyboard: (await commands.wallet(chatId)).content
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -81,7 +81,7 @@ bot.on(`message`, async (msg) => {
                 )
 
                 bot.once(`message`, async (msg) => {
-                    // check token address
+                    await commands.getTokenInfo(msg.text!)
                     console.log(msg.text)
                     return
                 })
@@ -125,7 +125,11 @@ bot.on(`message`, async (msg) => {
                 break
         }
     } catch (e) {
-        console.log(e)
+        console.log('error -> \n',e)
+        await bot.sendMessage(
+            chatId,
+            (await commands.invalid()).title
+        )
     }
 });
 
@@ -188,8 +192,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                 )
 
                 bot.once(`message`, async (msg) => {
-                    // check token address
-                    console.log(msg.text)
+                    await commands.getTokenInfo(msg.text!)
+                    console.log('msg.text')
                     return
                 })
 
@@ -211,10 +215,23 @@ bot.on('callback_query', async (query: CallbackQuery) => {
             case 'wallet':
                 await bot.sendMessage(
                     chatId,
-                    (await commands.wallet(chatId, msgId)).title,
+                    (await commands.wallet(chatId)).title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.wallet(chatId, msgId)).content
+                            inline_keyboard: (await commands.wallet(chatId)).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+
+                break
+
+            case 'reset':
+                await bot.sendMessage(
+                    chatId,
+                    (await commands.confirm('resetWallet')).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.confirm('resetWallet')).content
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -224,10 +241,10 @@ bot.on('callback_query', async (query: CallbackQuery) => {
             case 'export':
                 await bot.sendMessage(
                     chatId,
-                    (await commands.exportKey()).title,
+                    (await commands.confirm('exportKey')).title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.exportKey()).content
+                            inline_keyboard: (await commands.confirm('exportKey')).content
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -273,6 +290,20 @@ bot.on('callback_query', async (query: CallbackQuery) => {
 
                 break
 
+            case 'refresh':
+                await bot.deleteMessage(chatId, msgId)
+
+                bot.sendMessage(
+                    chatId,
+                    (await commands.refreshWallet(chatId)).title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (await commands.refreshWallet(chatId)).content
+                        }, parse_mode: 'HTML'
+                    })
+
+                break
+
             case 'pin':
                 await bot.editMessageReplyMarkup(
                     {
@@ -307,7 +338,11 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                 break
         }
     } catch (e) {
-        console.log(e)
+        console.log('error -> \n',e)
+        await bot.sendMessage(
+            chatId,
+            (await commands.invalid()).title
+        )
     }
 
 })

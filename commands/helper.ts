@@ -1,4 +1,5 @@
 import * as web3 from '@solana/web3.js'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import bs58 from 'bs58';
 import { encode } from 'js-base64';
 
@@ -7,6 +8,8 @@ import { Iuser } from '../utils/type';
 import { readData, writeData } from '../utils';
 
 let userData: Iuser = {}
+
+const connection = new web3.Connection(RpcURL)
 
 export const init = async () => {
   userData = await readData(userPath)
@@ -19,10 +22,9 @@ export const checkInfo = async (chatId: number) => {
 
 export const fetch = async (chatId: number, botName?: string) => {
   try {
-    const connection = new web3.Connection(RpcURL)
-    const balance = await connection.getBalance(new web3.PublicKey(userData[chatId].publicKey))
+    const balance = (await connection.getBalance(new web3.PublicKey(userData[chatId].publicKey))) / 1e9
     userData[chatId].balance = balance
-    writeData(userData,userPath)
+    writeData(userData, userPath)
     return {
       publicKey: userData[chatId].publicKey,
       privateKey: userData[chatId].privateKey,
@@ -66,9 +68,8 @@ export const importWalletHelper = async (chatId: number, privateKeyHex: string, 
   const publicKey = keypair.publicKey;
   const privateKey = bs58.encode(Buffer.from(keypair.secretKey))
   const referralLink = `https://t.me/${botName}?ref=${encode(chatId.toString())}`
-  const connection = new web3.Connection(RpcURL)
   try {
-    const balance = await connection.getBalance(new web3.PublicKey(publicKey))
+    const balance = (await connection.getBalance(new web3.PublicKey(publicKey))) / 1e9
     userData[chatId] = {
       privateKey,
       publicKey: publicKey.toString(),
@@ -82,7 +83,7 @@ export const importWalletHelper = async (chatId: number, privateKeyHex: string, 
       publicKey,
       privateKey,
       referralLink,
-      balance: 0
+      balance
     }
 
   } catch (e) {
@@ -102,5 +103,24 @@ export const importWalletHelper = async (chatId: number, privateKeyHex: string, 
       balance: 0
     }
 
+  }
+}
+
+export const checkValidAddr = async (addr: string) => {
+  try {
+    const tokenAccountInfo = await connection.getParsedAccountInfo(new web3.PublicKey(addr))
+    if (tokenAccountInfo.value?.data) {
+      const info = (JSON.parse(JSON.stringify(tokenAccountInfo.value?.data))).parsed
+      console.log(info)
+      // if ('amount' in tokenAccountInfo.value && 'decimals' in tokenAccountInfo.value) {
+      // console.log(await connection.getAccountInfo(new web3.PublicKey(addr)))
+      // } else {
+      //   return null;
+      // }
+    } else {
+      return null;
+    }
+  } catch (e) {
+    console.log(e)
   }
 }
