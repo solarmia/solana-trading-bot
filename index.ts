@@ -8,6 +8,7 @@ import { init } from "./commands/helper";
 const token = BotToken
 const bot = new TelegramBot(token!, { polling: true });
 let botName: string
+let editText: string
 
 console.log("Bot started");
 
@@ -81,8 +82,19 @@ bot.on(`message`, async (msg) => {
                 )
 
                 bot.once(`message`, async (msg) => {
-                    await commands.getTokenInfo(msg.text!)
-                    console.log(msg.text)
+                    const result = await commands.getTokenInfo(msg.text!)
+                    if (result) await bot.sendPhoto(
+                        chatId,
+                        result.image,
+                        {
+                            caption: result.caption, parse_mode: 'HTML',
+                            reply_markup: {
+                                inline_keyboard: result.content,
+                                resize_keyboard: true
+                            }
+                        },
+
+                    )
                     return
                 })
 
@@ -125,7 +137,7 @@ bot.on(`message`, async (msg) => {
                 break
         }
     } catch (e) {
-        console.log('error -> \n',e)
+        console.log('error -> \n', e)
         await bot.sendMessage(
             chatId,
             (await commands.invalid()).title
@@ -181,6 +193,7 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                 break
 
             case 'buy':
+                bot.answerInlineQuery
                 await bot.sendMessage(
                     chatId,
                     (await commands.buy(chatId)).title,
@@ -192,8 +205,19 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                 )
 
                 bot.once(`message`, async (msg) => {
-                    await commands.getTokenInfo(msg.text!)
-                    console.log('msg.text')
+                    const result = await commands.getTokenInfo(msg.text!)
+                    if (result) await bot.sendPhoto(
+                        chatId,
+                        result.image,
+                        {
+                            caption: result.caption, parse_mode: 'HTML',
+                            reply_markup: {
+                                inline_keyboard: result.content,
+                                resize_keyboard: true
+                            }
+                        },
+
+                    )
                     return
                 })
 
@@ -330,6 +354,44 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                 await bot.unpinChatMessage(chatId)
                 break
 
+            case 'announcement':
+                await bot.editMessageReplyMarkup(
+                    {
+                        inline_keyboard: (await commands.newSettings(chatId, 'announcement')).content
+                    },
+                    {
+                        chat_id: chatId,
+                        message_id: msgId
+                    }
+                )
+                break
+
+            case 'buy1':
+            case 'buy2':
+                // if(action == '')
+                editText =  `Reply with your new setting for the ${action == 'buy1' ? 'left' : 'right'} Buy Button in SOL. 
+                Example: 0.5`
+
+
+                await bot.sendMessage(
+                    chatId,
+                    editText)
+
+                bot.once(`message`, async (msg) => {
+                    await bot.editMessageReplyMarkup(
+                        {
+                            inline_keyboard: (await commands.newSettings(chatId, action, msg.text)).content
+                        },
+                        {
+                            chat_id: chatId,
+                            message_id: msgId
+                        }
+                    )
+                    return
+                })
+
+                break
+
             case 'cancel':
                 await bot.deleteMessage(chatId, msgId)
                 break
@@ -338,7 +400,7 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                 break
         }
     } catch (e) {
-        console.log('error -> \n',e)
+        console.log('error -> \n', e)
         await bot.sendMessage(
             chatId,
             (await commands.invalid()).title
@@ -346,3 +408,5 @@ bot.on('callback_query', async (query: CallbackQuery) => {
     }
 
 })
+
+// await bot.answerCallbackQuery(callbackQueryId, { text: 'Input Token address to buy' })

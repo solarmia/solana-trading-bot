@@ -1,10 +1,7 @@
 import fs from 'fs';
 
-
-import { Iuser } from './type';
-
-export const readData = async (userPath: string): Promise<Iuser> => {
-  return JSON.parse(fs.readFileSync(userPath, `utf8`));
+export const readData = async (Path: string): Promise<any> => {
+  return JSON.parse(fs.readFileSync(Path, `utf8`));
 }
 
 export const writeData = async (data: any, path: any) => {

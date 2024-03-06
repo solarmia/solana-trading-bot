@@ -2,20 +2,33 @@ import * as web3 from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import bs58 from 'bs58';
 import { encode } from 'js-base64';
+import axios from 'axios';
+import fs from 'fs';
 
-import { RpcURL, userPath } from '../config';
-import { Iuser } from '../utils/type';
+import { RpcURL, userPath, tokenPath, statusPath, logoPath, settingsPath } from '../config';
+import { ISettings, IStatus, ITokenData, Iuser, initialSetting } from '../utils/type';
 import { readData, writeData } from '../utils';
 
 let userData: Iuser = {}
+let userStatus: IStatus = {}
+let tokens: ITokenData[]
+let settings: ISettings = {}
 
 const connection = new web3.Connection(RpcURL)
 
 export const init = async () => {
   userData = await readData(userPath)
+  userStatus = await readData(statusPath)
+  tokens = await readData(tokenPath)
+  settings = await readData(settingsPath)
 }
 
 export const checkInfo = async (chatId: number) => {
+  if (!(chatId.toString() in settings)) {
+    settings[chatId] = initialSetting
+    writeData(settings, settingsPath)
+  }
+
   if (chatId.toString() in userData) return true
   else false
 }
@@ -108,19 +121,28 @@ export const importWalletHelper = async (chatId: number, privateKeyHex: string, 
 
 export const checkValidAddr = async (addr: string) => {
   try {
-    const tokenAccountInfo = await connection.getParsedAccountInfo(new web3.PublicKey(addr))
-    if (tokenAccountInfo.value?.data) {
-      const info = (JSON.parse(JSON.stringify(tokenAccountInfo.value?.data))).parsed
-      console.log(info)
-      // if ('amount' in tokenAccountInfo.value && 'decimals' in tokenAccountInfo.value) {
-      // console.log(await connection.getAccountInfo(new web3.PublicKey(addr)))
-      // } else {
-      //   return null;
-      // }
-    } else {
-      return null;
-    }
+    const info = tokens.filter((val: any) => val.address == addr)
+    if (info) {
+      const response = await axios.get(info[0].logoURI, { responseType: 'arraybuffer' });
+      fs.writeFileSync(logoPath, Buffer.from(response.data));
+      return { symbol: info[0].symbol, name: info[0].name, decimals: info[0].decimals, logo: logoPath, website: info[0].extensions.website }
+    } else return null
   } catch (e) {
     console.log(e)
   }
+}
+
+export const getSetting = async (chatId: number) => {
+  settings = await readData(settingsPath)
+  return settings[chatId]
+}
+
+export const setSettings = async (chatId: number, category: string, value?: any) => {
+  if (category == 'announcement') settings[chatId]['announcement'] = !settings[chatId]['announcement']
+  else {
+    //@ts-ignore
+    settings[chatId][category] = value
+  }
+  writeData(settings, settingsPath)
+  return settings[chatId]
 }

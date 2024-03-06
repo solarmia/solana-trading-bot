@@ -1,4 +1,4 @@
-import { checkInfo, checkValidAddr, createWalletHelper, fetch, importWalletHelper } from './helper'
+import { checkInfo, checkValidAddr, createWalletHelper, fetch, getSetting, importWalletHelper, setSettings } from './helper'
 
 interface IConfirm {
     [key: string]: {
@@ -55,6 +55,7 @@ export const commandList = [
 // }
 
 export const welcome = async (chatId: number, botName?: string, pin: boolean = false) => {
+
     if (await checkInfo(chatId)) {
         const { publicKey, balance } = await fetch(chatId, botName)
 
@@ -63,7 +64,7 @@ export const welcome = async (chatId: number, botName?: string, pin: boolean = f
 To get started with trading, send some SOL to your Honestbot wallet address:
 <code>${publicKey}</code>
 
-Sol balance: ${balance}
+Sol balance: ${balance} SOL
 
 Once done tap refresh and your balance will appear here.`
 
@@ -101,7 +102,7 @@ export const importWallet = async (chatId: number, privateKey: string, botName: 
 Your Honestbot wallet address:
 <code>${publicKey}</code>
 
-Sol balance: ${balance}`
+Sol balance: ${balance} SOL`
 
     const content = [
         [{ text: `Buy`, callback_data: 'buy' }, { text: `Sell`, callback_data: 'sell' }],
@@ -122,7 +123,7 @@ export const refreshWallet = async (chatId: number) => {
 Your Honestbot wallet address:
 <code>${publicKey}</code>
 
-Sol balance: ${balance}`
+Sol balance: ${balance} SOL`
 
     const content = [
         [{ text: `View on solscan`, url: `https://solscan.io/account/${publicKey}` }, { text: `Refresh`, callback_data: `refresh` }],
@@ -144,7 +145,7 @@ export const createWallet = async (chatId: number, botName: string) => {
 To get started with trading, send some SOL to your Honestbot wallet address:
 <code>${publicKey}</code>
 
-Sol balance: ${balance}
+Sol balance: ${balance} SOL
 
 Once done tap refresh and your balance will appear here.`
 
@@ -255,14 +256,26 @@ You can get reward if you refer someone`
 }
 
 export const settings = async (chatId: number) => {
-    // AUTO BUY
-    // Immediately buy when pasting token address. Tap to toggle.
+    //     const title = `Settings
 
+    // GENERAL SETTINGS
+    // Honest bot Announcements: Occasional announcements. Tap to toggle.
+    // Minimum Position Value: Minimum position value to show in portfolio. Will hide tokens below this threshhold. Tap to edit.
+
+    // SLIPPAGE CONFIG
+    // Customize your slippage settings for buys and sells. Tap to edit.
+    // Max Price Impact is to protect against trades in extremely illiquid pools.
+
+    // TRANSACTION PRIORITY
+    // Increase your Transaction Priority to improve transaction speed. Select preset or tap to edit.`
     const title = `Settings
 
 GENERAL SETTINGS
 Honest bot Announcements: Occasional announcements. Tap to toggle.
 Minimum Position Value: Minimum position value to show in portfolio. Will hide tokens below this threshhold. Tap to edit.
+
+BUTTONS CONFIG
+Customize your buy and sell buttons for buy token and manage position. Tap to edit.
 
 SLIPPAGE CONFIG
 Customize your slippage settings for buys and sells. Tap to edit.
@@ -271,19 +284,83 @@ Max Price Impact is to protect against trades in extremely illiquid pools.
 TRANSACTION PRIORITY
 Increase your Transaction Priority to improve transaction speed. Select preset or tap to edit.`
 
+    const { announcement, buy1, buy2, sell1, sell2, slippage1, slippage2, priority, priorityAmount } = await getSetting(chatId)
     const content = [
-        [{ text: `BonkBot settings`, callback_data: `viewbutton` }],
-        [{ text: `Announcements`, callback_data: `announcement` }, {
-            text: `Min pos value`, callback_data: `minpos`
+        [{ text: `--- General settings ---`, callback_data: `general config` }],
+        [{ text: `Announcements`, callback_data: `announcement config` }, {
+            text: `${announcement ? '🟢 Enable' : '🔴 Disable'}`, callback_data: `announcement`
+        }],
+        [{ text: `--- Buy Amount Config ---`, callback_data: `buy config` }],
+        [{ text: `✎ Left: ${buy1} SOL`, callback_data: `buy1` }, {
+            text: `✎ Right: ${buy2} SOL`, callback_data: `buy2`
+        }],
+        [{ text: `--- Sell Amount Config ---`, callback_data: `sell config` }],
+        [{ text: `✎ Left: ${sell1} %`, callback_data: `sell1` }, {
+            text: `✎ Right: ${sell2} %`, callback_data: `sell2`
+        }],
+        [{ text: `--- Slippage Percentage Config ---`, callback_data: `slippage config` }],
+        [{ text: `✎ Buy: ${slippage1} %`, callback_data: `slippage1` }, {
+            text: `✎ Sell: ${slippage2} %`, callback_data: `slippage2`
+        }],
+        [{ text: `--- Transaction Priority Config ---`, callback_data: `priority config` }],
+        [{ text: `⇌ ${priority}`, callback_data: `priority-config` }, {
+            text: `✎ ${priorityAmount} SOL`, callback_data: `priority-custom`
         }],
     ]
 
     return { title, content }
 }
 
+export const newSettings = async (chatId: number, category: string, value?: any) => {
+    const { announcement, buy1, buy2, sell1, sell2, slippage1, slippage2, priority, priorityAmount } = await setSettings(chatId, category, value)
+    const content = [
+        [{ text: `--- General settings ---`, callback_data: `general config` }],
+        [{ text: `Announcements`, callback_data: `announcement` }, {
+            text: `${announcement ? '🟢 Enable' : '🔴 Disable'}`, callback_data: `announcement`
+        }],
+        [{ text: `--- Buy Amount Config ---`, callback_data: `buy config` }],
+        [{ text: `✎ Left: ${buy1} SOL`, callback_data: `buy1` }, {
+            text: `✎ Right: ${buy2} SOL`, callback_data: `buy2`
+        }],
+        [{ text: `--- Sell Amount Config ---`, callback_data: `sell config` }],
+        [{ text: `✎ Left: ${sell1} %`, callback_data: `sell1` }, {
+            text: `✎ Right: ${sell2} %`, callback_data: `sell2`
+        }],
+        [{ text: `--- Slippage Percentage Config ---`, callback_data: `slippage config` }],
+        [{ text: `✎ Buy: ${slippage1} %`, callback_data: `slippage1` }, {
+            text: `✎ Sell: ${slippage2} %`, callback_data: `slippage2`
+        }],
+        [{ text: `--- Transaction Priority Config ---`, callback_data: `priority config` }],
+        [{ text: `⇌ ${priority}`, callback_data: `priority-config` }, {
+            text: `✎ ${priorityAmount} SOL`, callback_data: `priority-custom`
+        }],
+    ]
+
+    return { content }
+}
+
 export const getTokenInfo = async (address: string) => {
     console.log("commands")
     const result = await checkValidAddr(address)
+    if (result) {
+        const image = result.logo;
+        const caption = `${result.name} | ${result.symbol}
+
+Address: <code>${address}</code>
+
+Decimals: ${result.decimals}
+
+Website: ${result.website}`
+
+        const content = [
+            [{ text: `Website`, url: `${result.website}` }, { text: `Explorer`, url: `https://explorer.solana.com/address/${address}` }, { text: `Birdeye`, url: `https://birdeye.so/token/${address}?chain=solana` }],
+            [{ text: `Buy 0.1 sol`, callback_data: `buy1` }, {
+                text: `Buy 1 sol`, callback_data: `buy2`
+            }, { text: `Buy X sol`, callback_data: `buyX` }],
+            [{ text: `Close`, callback_data: `cancel` }]
+        ]
+        return { image, caption, content }
+    } else null
 }
 
 export const invalid = async () => {
