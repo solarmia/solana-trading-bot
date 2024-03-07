@@ -1,16 +1,18 @@
 import * as web3 from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getOrCreateAssociatedTokenAccount } from '@solana/spl-token';
 import bs58 from 'bs58';
 import { encode } from 'js-base64';
 import axios from 'axios';
 import fs from 'fs';
+import { fetch as fetchData } from 'cross-fetch';
 
-import { RpcURL, userPath, tokenPath, statusPath, logoPath, settingsPath } from '../config';
-import { ISettings, IStatus, ITokenData, Iuser, initialSetting } from '../utils/type';
-import { readData, writeData } from '../utils';
+import { RpcURL, userPath, tokenPath, userToeknPath, logoPath, settingsPath, fee, quoteURL, solAddr, feeAccountAddr, feeAccountSecret, swapURL } from '../config';
+import { ISettings, IUserToken, ITokenData, Iuser, initialSetting,  IUserTokenList } from '../utils/type';
+import { readData, tokenSwap, writeData } from '../utils';
+import { TokenList } from '@raydium-io/raydium-sdk';
 
 let userData: Iuser = {}
-let userStatus: IStatus = {}
+let userTokens: IUserTokenList = {}
 let tokens: ITokenData[]
 let settings: ISettings = {}
 
@@ -18,7 +20,7 @@ const connection = new web3.Connection(RpcURL)
 
 export const init = async () => {
   userData = await readData(userPath)
-  userStatus = await readData(statusPath)
+  userTokens = await readData(userToeknPath)
   tokens = await readData(tokenPath)
   settings = await readData(settingsPath)
 }
@@ -122,7 +124,7 @@ export const importWalletHelper = async (chatId: number, privateKeyHex: string, 
 export const checkValidAddr = async (addr: string) => {
   try {
     const info = tokens.filter((val: any) => val.address == addr)
-    if (info) {
+    if (info.length) {
       const response = await axios.get(info[0].logoURI, { responseType: 'arraybuffer' });
       fs.writeFileSync(logoPath, Buffer.from(response.data));
       return { symbol: info[0].symbol, name: info[0].name, decimals: info[0].decimals, logo: logoPath, website: info[0].extensions.website }
@@ -133,16 +135,163 @@ export const checkValidAddr = async (addr: string) => {
 }
 
 export const getSetting = async (chatId: number) => {
-  settings = await readData(settingsPath)
+  if ((chatId in settings)) {
+    settings = await readData(settingsPath)
+  } else {
+    settings[chatId] = initialSetting
+    writeData(settings, settingsPath)
+  }
   return settings[chatId]
 }
 
 export const setSettings = async (chatId: number, category: string, value?: any) => {
   if (category == 'announcement') settings[chatId]['announcement'] = !settings[chatId]['announcement']
+  else if (category == 'priority') {
+    switch (settings[chatId].priority) {
+      case 'Custom':
+        settings[chatId].priority = 'Medium'
+        settings[chatId].priorityAmount = 0.0001
+        break
+      case 'Medium':
+        settings[chatId].priority = 'High'
+        settings[chatId].priorityAmount = 0.0005
+        break
+      case 'High':
+        settings[chatId].priority = 'Very High'
+        settings[chatId].priorityAmount = 0.001
+        break
+      case 'Very High':
+        settings[chatId].priority = 'Medium'
+        settings[chatId].priorityAmount = 0.0001
+        break
+    }
+  }
   else {
     //@ts-ignore
     settings[chatId][category] = value
+    if (category == 'priorityAmount') settings[chatId]['priority'] = 'Custom'
   }
   writeData(settings, settingsPath)
   return settings[chatId]
+}
+
+export const getTokenBalance = async (chatId: number, address: string) => {
+  const sourceAccount = await getAssociatedTokenAddress(
+    new web3.PublicKey(address),
+    new web3.PublicKey(userData[chatId].publicKey)
+  );
+
+  const info = await connection.getTokenAccountBalance(sourceAccount);
+  return info
+}
+
+export const buyTokenHelper = async (chatId: number, value: string, tokenAddr: string, type: string) => {
+  settings = await readData(settingsPath)
+  userData = await readData(userPath)
+  const setInfo = settings[chatId]
+  const userInfo = userData[chatId]
+  let amount: number
+
+  if (type == 'buy') {
+    switch (value) {
+      case 'buyS':
+        amount = setInfo.buy1
+        break
+      case 'buyL':
+        amount = setInfo.buy2
+        break
+      default:
+        amount = Number(value)
+    }
+    amount = Number(amount) * web3.LAMPORTS_PER_SOL
+    // try {
+    const slippageBps = setInfo.slippage1
+    const swapMode = 'ExactIn'
+    const platformFeeBps = fee
+    const userPublicKey = userInfo.publicKey
+    const userPrivateKey = userInfo.privateKey
+    const computeUnitPriceMicroLamports = setInfo.priorityAmount * 10000
+
+    const result = await tokenSwap(solAddr, tokenAddr, amount, slippageBps, swapMode, platformFeeBps, userPublicKey, userPrivateKey, computeUnitPriceMicroLamports)
+    console.log('result', result)
+    return result
+    // } catch (e) {
+    //   if (e instanceof Error) {
+    //     console.log('name', e.name)
+    //     console.log('message', e.message)
+    //     return { error: e.name }
+    //   } else return undefined
+    // }
+  } else {
+    switch (value) {
+      case 'sellS':
+        amount = setInfo.sell1
+        break
+      case 'sellL':
+        amount = setInfo.sell2
+        break
+      default:
+        amount = Number(value)
+    }
+    const bal = await getTokenBalance(chatId, tokenAddr)
+    amount = Math.floor(bal.value.uiAmount! * Number(amount) / 100 * Math.pow(10, (await checkValidAddr(tokenAddr))?.decimals!))
+    // try {
+    const slippageBps = setInfo.slippage2
+    const swapMode = 'ExactIn'
+    const platformFeeBps = fee
+    const userPublicKey = userInfo.publicKey
+    const userPrivateKey = userInfo.privateKey
+    const computeUnitPriceMicroLamports = setInfo.priorityAmount * 10000
+
+    const result = await tokenSwap(tokenAddr, solAddr, amount, slippageBps, swapMode, platformFeeBps, userPublicKey, userPrivateKey, computeUnitPriceMicroLamports)
+    console.log('result', result)
+    return result
+    // } catch (e) {
+    //   if (e instanceof Error) {
+    //     console.log('name', e.name)
+    //     console.log('message', e.message)
+    //     return { error: e.name }
+    //   } else return undefined
+    // }
+  }
+}
+
+export const getAllTokenList = async (chatId: number) => {
+  userData = await readData(userPath)
+
+  const tokenAccounts = await connection.getParsedTokenAccountsByOwner(new web3.PublicKey(userData[chatId].publicKey), {
+    programId: TOKEN_PROGRAM_ID,
+  });
+
+  const tokensList: IUserToken[] = []
+  for (let i = 0; i < tokenAccounts.value.length; i++) {
+    const addr = tokenAccounts.value[i].account.data.parsed.info.mint
+
+    // const sourceAccount = await getAssociatedTokenAddress(
+    //   new web3.PublicKey(addr),
+    //   new web3.PublicKey(userData[chatId].publicKey)
+    // );
+
+    const bal = await getTokenBalance(chatId, addr)
+    if (bal.value.uiAmount && bal.value.uiAmount > 0) {
+      const info = await checkValidAddr(addr)
+      if (info) tokensList.push({ token: addr, symbol: info.symbol, name: info.name, balance: bal.value.uiAmount, decimals: info.decimals, website: info.website })
+    }
+    userTokens[chatId] = tokensList
+    writeData(userTokens, userToeknPath)
+  }
+  return tokensList
+
+  // const tokenMetadata = await Promise.all(
+  //   tokenAddresses.map(async (tokenAddress) => {
+  //     const token = new Token(connection, tokenAddress, TOKEN_PROGRAM_ID);
+  //     const tokenInfo = await token.getMintInfo();
+  //     return {
+  //       tokenAddress: tokenAddress.toBase58(),
+  //       tokenName: tokenInfo.name,
+  //       tokenSymbol: tokenInfo.symbol,
+  //       tokenDecimals: tokenInfo.decimals,
+  //     };
+  //   })
+  // );
 }

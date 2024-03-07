@@ -27,16 +27,18 @@ bot.on(`message`, async (msg) => {
     const username = msg.from!.username!
     if (text) console.log(`message : ${chatId} -> ${text}`)
     else return
+    let result
     try {
         switch (text) {
             case `/start`:
                 await bot.deleteMessage(chatId, msgId)
+                result = await commands.welcome(chatId, botName)
                 await bot.sendMessage(
                     chatId,
-                    (await commands.welcome(chatId, botName)).title,
+                    result.title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.welcome(chatId, botName)).content
+                            inline_keyboard: result.content
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -44,12 +46,13 @@ bot.on(`message`, async (msg) => {
 
             case `/settings`:
                 await bot.deleteMessage(chatId, msgId)
+                result = await commands.settings(chatId)
                 await bot.sendMessage(
                     chatId,
-                    (await commands.settings(chatId)).title,
+                    result.title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.settings(chatId)).content
+                            inline_keyboard: result.content
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -57,12 +60,14 @@ bot.on(`message`, async (msg) => {
 
             case '/wallet':
                 await bot.deleteMessage(chatId, msgId)
-                const id = await bot.sendMessage(
+                result = await commands.wallet(chatId)
+
+                await bot.sendMessage(
                     chatId,
-                    (await commands.wallet(chatId)).title,
+                    result.title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.wallet(chatId)).content
+                            inline_keyboard: result.content
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -71,18 +76,19 @@ bot.on(`message`, async (msg) => {
 
             case '/buy':
                 await bot.deleteMessage(chatId, msgId)
+                result = await commands.buy()
                 await bot.sendMessage(
                     chatId,
-                    (await commands.buy(chatId)).title,
+                    result.title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.buy(chatId)).content
+                            inline_keyboard: result.content
                         }, parse_mode: 'HTML'
                     }
                 )
 
                 bot.once(`message`, async (msg) => {
-                    const result = await commands.getTokenInfo(msg.text!)
+                    result = await commands.getTokenInfo(chatId, msg.text!, 'buy')
                     if (result) await bot.sendPhoto(
                         chatId,
                         result.image,
@@ -95,19 +101,27 @@ bot.on(`message`, async (msg) => {
                         },
 
                     )
+                    else {
+                        const issue = commands.invalid('inputBuyTokenAddress')
+                        await bot.sendMessage(chatId, issue.title, {
+                            reply_markup: {
+                                inline_keyboard: issue.content
+                            }, parse_mode: 'HTML'
+                        })
+                    }
                     return
                 })
-
                 break
 
             case '/sell':
                 await bot.deleteMessage(chatId, msgId)
+                result = await commands.sell(chatId)
                 await bot.sendMessage(
                     chatId,
-                    (await commands.sell(chatId)).title,
+                    result.title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.sell(chatId)).content
+                            inline_keyboard: result.content
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -116,12 +130,13 @@ bot.on(`message`, async (msg) => {
 
             case '/referral':
                 await bot.deleteMessage(chatId, msgId)
+                result = await commands.refer(chatId)
                 await bot.sendMessage(
                     chatId,
-                    (await commands.refer(chatId)).title,
+                    result.title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.refer(chatId)).content
+                            inline_keyboard: result.content
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -130,6 +145,11 @@ bot.on(`message`, async (msg) => {
 
             case '/help':
                 await bot.deleteMessage(chatId, msgId)
+                result = commands.help()
+                await bot.sendMessage(
+                    chatId,
+                    result
+                )
 
                 break
 
@@ -138,10 +158,12 @@ bot.on(`message`, async (msg) => {
         }
     } catch (e) {
         console.log('error -> \n', e)
-        await bot.sendMessage(
-            chatId,
-            (await commands.invalid()).title
-        )
+        const issue = commands.invalid('internal')
+        await bot.sendMessage(chatId, issue.title, {
+            reply_markup: {
+                inline_keyboard: issue.content
+            }, parse_mode: 'HTML'
+        })
     }
 });
 
@@ -154,6 +176,7 @@ bot.on('callback_query', async (query: CallbackQuery) => {
 
     console.log(`query : ${chatId} -> ${action}`)
     try {
+        let result
         switch (action) {
             case 'import':
                 await bot.deleteMessage(chatId, msgId)
@@ -165,12 +188,13 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                 bot.once(`message`, async (msg) => {
                     await bot.deleteMessage(chatId, inputmsg.message_id)
                     await bot.deleteMessage(chatId, msg.message_id)
+                    result = await commands.importWallet(chatId, msg.text!, botName)
                     await bot.sendMessage(
                         chatId,
-                        (await commands.importWallet(chatId, msg.text!, botName)).title,
+                        result.title,
                         {
                             reply_markup: {
-                                inline_keyboard: (await commands.importWallet(chatId, msg.text!, botName)).content
+                                inline_keyboard: result.content
                             }, parse_mode: 'HTML'
                         }
                     )
@@ -181,31 +205,31 @@ bot.on('callback_query', async (query: CallbackQuery) => {
 
             case 'create':
                 await bot.deleteMessage(chatId, msgId)
+                result = await commands.createWallet(chatId, botName)
                 await bot.sendMessage(
                     chatId,
-                    (await commands.createWallet(chatId, botName)).title,
+                    result.title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.createWallet(chatId, botName)).content
+                            inline_keyboard: result.content
                         }, parse_mode: 'HTML'
                     }
                 )
                 break
 
             case 'buy':
-                bot.answerInlineQuery
                 await bot.sendMessage(
                     chatId,
-                    (await commands.buy(chatId)).title,
+                    (await commands.buy()).title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.buy(chatId)).content
+                            inline_keyboard: (await commands.buy()).content
                         }, parse_mode: 'HTML'
                     }
                 )
 
                 bot.once(`message`, async (msg) => {
-                    const result = await commands.getTokenInfo(msg.text!)
+                    const result = await commands.getTokenInfo(chatId, msg.text!, 'buy')
                     if (result) await bot.sendPhoto(
                         chatId,
                         result.image,
@@ -218,6 +242,14 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                         },
 
                     )
+                    else {
+                        const issue = commands.invalid('inputBuyTokenAddress')
+                        await bot.sendMessage(chatId, issue.title, {
+                            reply_markup: {
+                                inline_keyboard: issue.content
+                            }, parse_mode: 'HTML'
+                        })
+                    }
                     return
                 })
 
@@ -311,7 +343,6 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                         }, parse_mode: 'HTML'
                     }
                 )
-
                 break
 
             case 'refresh':
@@ -354,10 +385,11 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                 await bot.unpinChatMessage(chatId)
                 break
 
+            case 'priority':
             case 'announcement':
                 await bot.editMessageReplyMarkup(
                     {
-                        inline_keyboard: (await commands.newSettings(chatId, 'announcement')).content
+                        inline_keyboard: (await commands.newSettings(chatId, action)).content
                     },
                     {
                         chat_id: chatId,
@@ -368,16 +400,23 @@ bot.on('callback_query', async (query: CallbackQuery) => {
 
             case 'buy1':
             case 'buy2':
-                // if(action == '')
-                editText =  `Reply with your new setting for the ${action == 'buy1' ? 'left' : 'right'} Buy Button in SOL. 
-                Example: 0.5`
+            case 'sell1':
+            case 'sell2':
+            case 'slippage1':
+            case 'slippage2':
+            case 'priorityAmount':
+                if (action == 'buy1' || action == 'buy2') editText = `Reply with your new setting for the ${action == 'buy1' ? 'left' : 'right'} Buy Button in SOL. Example: 0.5`
+                else if (action == 'sell1' || action == 'sell2') editText = `Reply with your new setting for the ${action == 'sell1' ? 'left' : 'right'} Sell Button in % (0 - 100%). Example: 100`
+                else if (action == 'slippage1' || action == 'slippage2') editText = `Reply with your new slippage setting for ${action == 'slippage1' ? 'buys' : 'sells'} in % (0.00 - 100.00%). Example: 5.5`
+                else if (action == 'priorityAmount') editText = `Reply with your new Transaction Priority Setting for sells in SOL. Example: 0.0001`
 
-
-                await bot.sendMessage(
+                const desc = await bot.sendMessage(
                     chatId,
                     editText)
 
                 bot.once(`message`, async (msg) => {
+                    await bot.deleteMessage(chatId, msg.message_id)
+                    await bot.deleteMessage(chatId, desc.message_id)
                     await bot.editMessageReplyMarkup(
                         {
                             inline_keyboard: (await commands.newSettings(chatId, action, msg.text)).content
@@ -387,9 +426,18 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                             message_id: msgId
                         }
                     )
+
                     return
                 })
 
+                break
+
+            case 'help':
+                result = commands.help()
+                await bot.sendMessage(
+                    chatId,
+                    result
+                )
                 break
 
             case 'cancel':
@@ -399,12 +447,145 @@ bot.on('callback_query', async (query: CallbackQuery) => {
             default:
                 break
         }
+
+        if (action.startsWith('buyS') || action.startsWith('buyL') || action.startsWith('buyX')) {
+            const address = action.split(':')[1]
+            const method = action.split(':')[0]
+            if (method == 'buyX') {
+                await bot.sendMessage(
+                    chatId,
+                    commands.inputBuyAmount().title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (commands.inputBuyAmount()).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+                bot.once('message', async (msg: any) => {
+                    if (isNaN(Number(msg.text)) || !Number(msg.text)) {
+                        const issue = commands.invalid('inputTokenAmount')
+                        await bot.sendMessage(chatId, issue.title, {
+                            reply_markup: {
+                                inline_keyboard: issue.content
+                            }, parse_mode: 'HTML'
+                        })
+                        return
+                    }
+                    const txConfirm = await bot.sendMessage(chatId, 'Transaction sent. Confirming now...')
+                    const tx = await commands.buyTokens(chatId, msg.text!, address, 'buy')
+                    if (tx['error']) {
+                        await bot.deleteMessage(chatId, txConfirm.message_id)
+                        if (tx.signature) await bot.sendMessage(
+                            chatId,
+                            `Error : ${tx.error}`, {
+                            reply_markup: {
+                                inline_keyboard: [[{ text: `Transaction Link`, url: tx.signature }]]
+                            }, parse_mode: 'HTML'
+                        })
+                        else await bot.sendMessage(
+                            chatId,
+                            `Error : ${tx.error}`)
+                    }
+                })
+            } else {
+                const txConfirm = await bot.sendMessage(chatId, 'Transaction sent. Confirming now...')
+                const tx = await commands.buyTokens(chatId, method, address, 'buy')
+                if (tx['error']) {
+                    await bot.deleteMessage(chatId, txConfirm.message_id)
+                    if (tx.signature) await bot.sendMessage(
+                        chatId,
+                        `Error : ${tx.error}`, {
+                        reply_markup: {
+                            inline_keyboard: [[{ text: `Transaction Link`, url: tx.signature }]]
+                        }, parse_mode: 'HTML'
+                    })
+                    else await bot.sendMessage(
+                        chatId,
+                        `Error : ${tx.error}`)
+                }
+            }
+
+        } else if (action.startsWith('sell:')) {
+            const address = action.split(':')[1]
+            const result = await commands.getTokenInfo(chatId, address, 'sell')
+            if (result) await bot.sendPhoto(
+                chatId,
+                result.image,
+                {
+                    caption: result.caption, parse_mode: 'HTML',
+                    reply_markup: {
+                        inline_keyboard: result.content,
+                        resize_keyboard: true
+                    }
+                },
+
+            )
+        } else if (action.startsWith('sellS') || action.startsWith('sellL') || action.startsWith('sellX')) {
+            const method = action.split(':')[0]
+            const address = action.split(':')[1]
+            if (method == 'sellX') {
+                await bot.sendMessage(
+                    chatId,
+                    commands.inputSellAmount().title,
+                    {
+                        reply_markup: {
+                            inline_keyboard: (commands.inputSellAmount()).content
+                        }, parse_mode: 'HTML'
+                    }
+                )
+                bot.once('message', async (msg: any) => {
+                    if (isNaN(Number(msg.text)) || !Number(msg.text)) {
+                        const issue = commands.invalid('inputTokenAmount')
+                        await bot.sendMessage(chatId, issue.title, {
+                            reply_markup: {
+                                inline_keyboard: issue.content
+                            }, parse_mode: 'HTML'
+                        })
+                        return
+                    }
+                    const txConfirm = await bot.sendMessage(chatId, 'Transaction sent. Confirming now...')
+                    const tx = await commands.buyTokens(chatId, msg.text!, address, 'sell')
+                    if (tx['error']) {
+                        await bot.deleteMessage(chatId, txConfirm.message_id)
+                        if (tx.signature) await bot.sendMessage(
+                            chatId,
+                            `Error : ${tx.error}`, {
+                            reply_markup: {
+                                inline_keyboard: [[{ text: `Transaction Link`, url: tx.signature }]]
+                            }, parse_mode: 'HTML'
+                        })
+                        else await bot.sendMessage(
+                            chatId,
+                            `Error : ${tx.error}`)
+                    }
+                })
+            } else {
+                const txConfirm = await bot.sendMessage(chatId, 'Transaction sent. Confirming now...')
+                const tx = await commands.buyTokens(chatId, method, address, 'sell')
+                if (tx['error']) {
+                    await bot.deleteMessage(chatId, txConfirm.message_id)
+                    if (tx.signature) await bot.sendMessage(
+                        chatId,
+                        `Error : ${tx.error}`, {
+                        reply_markup: {
+                            inline_keyboard: [[{ text: `Transaction Link`, url: tx.signature }]]
+                        }, parse_mode: 'HTML'
+                    })
+                    else await bot.sendMessage(
+                        chatId,
+                        `Error : ${tx.error}`)
+                }
+            }
+        }
+
     } catch (e) {
         console.log('error -> \n', e)
-        await bot.sendMessage(
-            chatId,
-            (await commands.invalid()).title
-        )
+        const issue = commands.invalid('internal')
+        await bot.sendMessage(chatId, issue.title, {
+            reply_markup: {
+                inline_keyboard: issue.content
+            }, parse_mode: 'HTML'
+        })
     }
 
 })

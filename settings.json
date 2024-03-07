@@ -1,13 +1,13 @@
 {
     "6381452440": {
-        "announcement": true,
-        "buy1": "0.1",
-        "buy2": "0.2",
+        "announcement": false,
+        "buy1": 0.05,
+        "buy2": 2,
         "sell1": 20,
         "sell2": 80,
-        "slippage1": 10,
-        "slippage2": 20,
-        "priority": "Medium",
-        "priorityAmount": 0.0001
+        "slippage1": 30,
+        "slippage2": 50,
+        "priority": "Very High",
+        "priorityAmount": 0.001
     }
 }
