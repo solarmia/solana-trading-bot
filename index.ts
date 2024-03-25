@@ -38,7 +38,8 @@ bot.on(`message`, async (msg) => {
                     result.title,
                     {
                         reply_markup: {
-                            inline_keyboard: result.content
+                            inline_keyboard: result.content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -52,7 +53,8 @@ bot.on(`message`, async (msg) => {
                     result.title,
                     {
                         reply_markup: {
-                            inline_keyboard: result.content
+                            inline_keyboard: result.content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -67,7 +69,8 @@ bot.on(`message`, async (msg) => {
                     result.title,
                     {
                         reply_markup: {
-                            inline_keyboard: result.content
+                            inline_keyboard: result.content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -82,22 +85,22 @@ bot.on(`message`, async (msg) => {
                     result.title,
                     {
                         reply_markup: {
-                            inline_keyboard: result.content
+                            inline_keyboard: result.content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
 
                 bot.once(`message`, async (msg) => {
                     result = await commands.getTokenInfo(chatId, msg.text!, 'buy')
-                    if (result) await bot.sendPhoto(
+                    if (result) await bot.sendMessage(
                         chatId,
-                        result.image,
+                        result.caption,
                         {
-                            caption: result.caption, parse_mode: 'HTML',
                             reply_markup: {
                                 inline_keyboard: result.content,
                                 resize_keyboard: true
-                            }
+                            }, parse_mode: 'HTML'
                         },
 
                     )
@@ -105,7 +108,8 @@ bot.on(`message`, async (msg) => {
                         const issue = commands.invalid('inputBuyTokenAddress')
                         await bot.sendMessage(chatId, issue.title, {
                             reply_markup: {
-                                inline_keyboard: issue.content
+                                inline_keyboard: issue.content,
+                                resize_keyboard: true
                             }, parse_mode: 'HTML'
                         })
                     }
@@ -121,7 +125,8 @@ bot.on(`message`, async (msg) => {
                     result.title,
                     {
                         reply_markup: {
-                            inline_keyboard: result.content
+                            inline_keyboard: result.content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -136,7 +141,8 @@ bot.on(`message`, async (msg) => {
                     result.title,
                     {
                         reply_markup: {
-                            inline_keyboard: result.content
+                            inline_keyboard: result.content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -161,7 +167,8 @@ bot.on(`message`, async (msg) => {
         const issue = commands.invalid('internal')
         await bot.sendMessage(chatId, issue.title, {
             reply_markup: {
-                inline_keyboard: issue.content
+                inline_keyboard: issue.content,
+                resize_keyboard: true
             }, parse_mode: 'HTML'
         })
     }
@@ -194,7 +201,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                         result.title,
                         {
                             reply_markup: {
-                                inline_keyboard: result.content
+                                inline_keyboard: result.content,
+                                resize_keyboard: true
                             }, parse_mode: 'HTML'
                         }
                     )
@@ -211,7 +219,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                     result.title,
                     {
                         reply_markup: {
-                            inline_keyboard: result.content
+                            inline_keyboard: result.content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -223,22 +232,22 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                     (await commands.buy()).title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.buy()).content
+                            inline_keyboard: (await commands.buy()).content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
 
                 bot.once(`message`, async (msg) => {
                     const result = await commands.getTokenInfo(chatId, msg.text!, 'buy')
-                    if (result) await bot.sendPhoto(
+                    if (result) await bot.sendMessage(
                         chatId,
-                        result.image,
+                        result.caption,
                         {
-                            caption: result.caption, parse_mode: 'HTML',
                             reply_markup: {
                                 inline_keyboard: result.content,
                                 resize_keyboard: true
-                            }
+                            }, parse_mode: 'HTML'
                         },
 
                     )
@@ -246,7 +255,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                         const issue = commands.invalid('inputBuyTokenAddress')
                         await bot.sendMessage(chatId, issue.title, {
                             reply_markup: {
-                                inline_keyboard: issue.content
+                                inline_keyboard: issue.content,
+                                resize_keyboard: true
                             }, parse_mode: 'HTML'
                         })
                     }
@@ -261,7 +271,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                     (await commands.sell(chatId)).title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.sell(chatId)).content
+                            inline_keyboard: (await commands.sell(chatId)).content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -274,7 +285,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                     (await commands.wallet(chatId)).title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.wallet(chatId)).content
+                            inline_keyboard: (await commands.wallet(chatId)).content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -287,7 +299,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                     (await commands.confirm('resetWallet')).title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.confirm('resetWallet')).content
+                            inline_keyboard: (await commands.confirm('resetWallet')).content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -300,7 +313,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                     (await commands.confirm('exportKey')).title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.confirm('exportKey')).content
+                            inline_keyboard: (await commands.confirm('exportKey')).content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -313,7 +327,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                     (await commands.showKey(chatId)).title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.showKey(chatId)).content
+                            inline_keyboard: (await commands.showKey(chatId)).content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -326,7 +341,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                     (await commands.refer(chatId)).title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.refer(chatId)).content
+                            inline_keyboard: (await commands.refer(chatId)).content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -339,7 +355,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                     (await commands.settings(chatId)).title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.settings(chatId)).content
+                            inline_keyboard: (await commands.settings(chatId)).content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -353,7 +370,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                     (await commands.refreshWallet(chatId)).title,
                     {
                         reply_markup: {
-                            inline_keyboard: (await commands.refreshWallet(chatId)).content
+                            inline_keyboard: (await commands.refreshWallet(chatId)).content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     })
 
@@ -457,7 +475,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                     commands.inputBuyAmount().title,
                     {
                         reply_markup: {
-                            inline_keyboard: (commands.inputBuyAmount()).content
+                            inline_keyboard: (commands.inputBuyAmount()).content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -466,7 +485,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                         const issue = commands.invalid('inputTokenAmount')
                         await bot.sendMessage(chatId, issue.title, {
                             reply_markup: {
-                                inline_keyboard: issue.content
+                                inline_keyboard: issue.content,
+                                resize_keyboard: true
                             }, parse_mode: 'HTML'
                         })
                         return
@@ -479,12 +499,23 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                             chatId,
                             `Error : ${tx.error}`, {
                             reply_markup: {
-                                inline_keyboard: [[{ text: `Transaction Link`, url: tx.signature }]]
+                                inline_keyboard: [[{ text: `Transaction Link`, url: tx.signature }]],
+                                resize_keyboard: true
                             }, parse_mode: 'HTML'
                         })
                         else await bot.sendMessage(
                             chatId,
                             `Error : ${tx.error}`)
+                    } else {
+                        await bot.deleteMessage(chatId, txConfirm.message_id)
+                        await bot.sendMessage(
+                            chatId,
+                            `Transaction Confirmed. Please check transaction `, {
+                            reply_markup: {
+                                inline_keyboard: [[{ text: `Transaction Link`, url: tx.signature }]],
+                                resize_keyboard: true
+                            }, parse_mode: 'HTML'
+                        })
                     }
                 })
             } else {
@@ -496,29 +527,38 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                         chatId,
                         `Error : ${tx.error}`, {
                         reply_markup: {
-                            inline_keyboard: [[{ text: `Transaction Link`, url: tx.signature }]]
+                            inline_keyboard: [[{ text: `Transaction Link`, url: tx.signature }]],
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     })
                     else await bot.sendMessage(
                         chatId,
                         `Error : ${tx.error}`)
+                } else {
+                    await bot.deleteMessage(chatId, txConfirm.message_id)
+                    await bot.sendMessage(
+                        chatId,
+                        `Transaction Confirmed. Please check transaction `, {
+                        reply_markup: {
+                            inline_keyboard: [[{ text: `Transaction Link`, url: tx.signature }]],
+                            resize_keyboard: true
+                        }, parse_mode: 'HTML'
+                    })
                 }
             }
 
         } else if (action.startsWith('sell:')) {
             const address = action.split(':')[1]
             const result = await commands.getTokenInfo(chatId, address, 'sell')
-            if (result) await bot.sendPhoto(
+            if (result) await bot.sendMessage(
                 chatId,
-                result.image,
+                result.caption,
                 {
-                    caption: result.caption, parse_mode: 'HTML',
                     reply_markup: {
                         inline_keyboard: result.content,
                         resize_keyboard: true
-                    }
+                    }, parse_mode: 'HTML'
                 },
-
             )
         } else if (action.startsWith('sellS') || action.startsWith('sellL') || action.startsWith('sellX')) {
             const method = action.split(':')[0]
@@ -529,7 +569,8 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                     commands.inputSellAmount().title,
                     {
                         reply_markup: {
-                            inline_keyboard: (commands.inputSellAmount()).content
+                            inline_keyboard: (commands.inputSellAmount()).content,
+                            resize_keyboard: true
                         }, parse_mode: 'HTML'
                     }
                 )
@@ -538,43 +579,46 @@ bot.on('callback_query', async (query: CallbackQuery) => {
                         const issue = commands.invalid('inputTokenAmount')
                         await bot.sendMessage(chatId, issue.title, {
                             reply_markup: {
-                                inline_keyboard: issue.content
+                                inline_keyboard: issue.content,
+                                resize_keyboard: true
                             }, parse_mode: 'HTML'
                         })
                         return
                     }
                     const txConfirm = await bot.sendMessage(chatId, 'Transaction sent. Confirming now...')
                     const tx = await commands.buyTokens(chatId, msg.text!, address, 'sell')
-                    if (tx['error']) {
-                        await bot.deleteMessage(chatId, txConfirm.message_id)
-                        if (tx.signature) await bot.sendMessage(
-                            chatId,
-                            `Error : ${tx.error}`, {
-                            reply_markup: {
-                                inline_keyboard: [[{ text: `Transaction Link`, url: tx.signature }]]
-                            }, parse_mode: 'HTML'
-                        })
-                        else await bot.sendMessage(
-                            chatId,
-                            `Error : ${tx.error}`)
-                    }
+                    // if (tx['error']) {
+                    //     await bot.deleteMessage(chatId, txConfirm.message_id)
+                    //     if (tx.signature) await bot.sendMessage(
+                    //         chatId,
+                    //         `Error : ${tx.error}`, {
+                    //         reply_markup: {
+                    //             inline_keyboard: [[{ text: `Transaction Link`, url: tx.signature }]],
+                    //             resize_keyboard: true
+                    //         }, parse_mode: 'HTML'
+                    //     })
+                    //     else await bot.sendMessage(
+                    //         chatId,
+                    //         `Error : ${tx.error}`)
+                    // }
                 })
             } else {
                 const txConfirm = await bot.sendMessage(chatId, 'Transaction sent. Confirming now...')
                 const tx = await commands.buyTokens(chatId, method, address, 'sell')
-                if (tx['error']) {
-                    await bot.deleteMessage(chatId, txConfirm.message_id)
-                    if (tx.signature) await bot.sendMessage(
-                        chatId,
-                        `Error : ${tx.error}`, {
-                        reply_markup: {
-                            inline_keyboard: [[{ text: `Transaction Link`, url: tx.signature }]]
-                        }, parse_mode: 'HTML'
-                    })
-                    else await bot.sendMessage(
-                        chatId,
-                        `Error : ${tx.error}`)
-                }
+                // if (tx['error']) {
+                //     await bot.deleteMessage(chatId, txConfirm.message_id)
+                //     if (tx.signature) await bot.sendMessage(
+                //         chatId,
+                //         `Error : ${tx.error}`, {
+                //         reply_markup: {
+                //             inline_keyboard: [[{ text: `Transaction Link`, url: tx.signature }]],
+                //             resize_keyboard: true
+                //         }, parse_mode: 'HTML'
+                //     })
+                //     else await bot.sendMessage(
+                //         chatId,
+                //         `Error : ${tx.error}`)
+                // }
             }
         }
 

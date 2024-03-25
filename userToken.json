@@ -1,12 +1,3 @@
 {
-    "6381452440": [
-        {
-            "token": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-            "symbol": "USDC",
-            "name": "USD Coin",
-            "balance": 13.913283,
-            "decimals": 6,
-            "website": "https://www.centre.io/"
-        }
-    ]
+    "6381452440": []
 }

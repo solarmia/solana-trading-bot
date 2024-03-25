@@ -389,66 +389,70 @@ Increase your Transaction Priority to improve transaction speed. Select preset o
         [{ text: `⇌ ${priority}`, callback_data: `priority` }, {
             text: `✎ ${priorityAmount} SOL`, callback_data: `priorityAmount`
         }],
+        [{ text: `Close`, callback_data: `cancel` }]
     ]
 
     return { title, content }
 }
 
 export const getTokenInfo = async (chatId: number, address: string, method: string) => {
-    const result = await checkValidAddr(address)
-    if (result) {
-        const image = result.logo;
-        if (method == 'buy') {
-            const caption = `Name: ${result.name}
-            
+    try {
+        const result = await checkValidAddr(address)
+        if (result) {
+            if (method == 'buy') {
+                const caption = `Name: ${result.name}
 Symbol: ${result.symbol}
-
 Address: <code>${address}</code>
-
 Decimals: ${result.decimals}
 
-Website: ${result.website}`
+Price: ${result.USDprice} $ / ${result.SOLprice} SOL
 
-            const { buy1, buy2 } = await getSetting(chatId)
-            const content = [
-                [{ text: `Website`, url: `${result.website}` }, { text: `Explorer`, url: `https://explorer.solana.com/address/${address}` }, { text: `Birdeye`, url: `https://birdeye.so/token/${address}?chain=solana` }],
-                [{ text: `Buy ${buy1} sol`, callback_data: `buyS:${address}` }, {
-                    text: `Buy ${buy2} sol`, callback_data: `buyL:${address}`
-                }, { text: `Buy X sol`, callback_data: `buyX:${address}` }],
-                [{ text: `Close`, callback_data: `cancel` }]
-            ]
-            return { image, caption, content }
-        } else {
-            const balance = await getTokenBalance(chatId, address)
-            console.log(balance.value.uiAmount, result.decimals)
-            const caption = `Name: ${result.name}
+Volume: 
+5m: ${result.priceX.m5} %, 1h: ${result.priceX.h1} %, 6h: ${result.priceX.h6} %, 1d: ${result.priceX.h24} %
+Market Cap: ${result.mcap} $`
 
+                const { buy1, buy2 } = await getSetting(chatId)
+                const content = [
+                    [{ text: `Explorer`, url: `https://explorer.solana.com/address/${address}` }, { text: `Birdeye`, url: `https://birdeye.so/token/${address}?chain=solana` }],
+                    [{ text: `Buy ${buy1} sol`, callback_data: `buyS:${address}` }, {
+                        text: `Buy ${buy2} sol`, callback_data: `buyL:${address}`
+                    }, { text: `Buy X sol`, callback_data: `buyX:${address}` }],
+                    [{ text: `Close`, callback_data: `cancel` }]
+                ]
+                return { caption, content }
+            } else {
+                const balance = await getTokenBalance(chatId, address)
+                console.log(balance.value.uiAmount, result.decimals)
+                const caption = `Name: ${result.name}
 Symbol: ${result.symbol}
-
 Address: <code>${address}</code>
-
 Decimals: ${result.decimals}
 
-balance: ${balance.value.uiAmount}
+Price: ${result.USDprice} $ / ${result.SOLprice} SOL
 
-Website: ${result.website}`
+Volume: 
+5m: ${result.priceX.m5} %, 1h: ${result.priceX.h1} %, 6h: ${result.priceX.h6} %, 1d: ${result.priceX.h24} %
+Market Cap: ${result.mcap} $`
 
-            const { sell1, sell2 } = await getSetting(chatId)
-            const content = [
-                [{ text: `Website`, url: `${result.website}` }, { text: `Explorer`, url: `https://explorer.solana.com/address/${address}` }, { text: `Birdeye`, url: `https://birdeye.so/token/${address}?chain=solana` }],
-                [{ text: `Sell ${sell1} %`, callback_data: `sellS:${address}` }, {
-                    text: `Sell ${sell2} %`, callback_data: `sellL:${address}`
-                }, { text: `Sell X %`, callback_data: `sellX:${address}` }],
-                [{ text: `Close`, callback_data: `cancel` }]
-            ]
-            return { image, caption, content }
-        }
-    } else undefined
+                const { sell1, sell2 } = await getSetting(chatId)
+                const content = [
+                    [{ text: `Explorer`, url: `https://explorer.solana.com/address/${address}` }, { text: `Birdeye`, url: `https://birdeye.so/token/${address}?chain=solana` }],
+                    [{ text: `Sell ${sell1} %`, callback_data: `sellS:${address}` }, {
+                        text: `Sell ${sell2} %`, callback_data: `sellL:${address}`
+                    }, { text: `Sell X %`, callback_data: `sellX:${address}` }],
+                    [{ text: `Close`, callback_data: `cancel` }]
+                ]
+                return { caption, content }
+            }
+        } else return undefined
+    } catch (e) {
+        console.log(e)
+        return undefined
+    }
 }
 
 export const buyTokens = async (chatId: number, value: string, address: string, type: string) => {
     const result = await buyTokenHelper(chatId, value, address, type)
-    console.log('here', result)
     return result
 }
 
